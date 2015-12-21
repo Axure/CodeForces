@@ -9,6 +9,14 @@ using namespace std;
 typedef struct edge {
   int start, end;
   int weight;
+
+  struct edge operator = (const struct edge& b) {
+    this->start = b.start;
+    this->end = b.end;
+    this->weight = b.weight;
+
+    return *this;
+  }
 } edge;
 
 class edge_comparator {
@@ -43,7 +51,6 @@ int main(int argc, char *argv[]) {
 
   }
 
-  edge first_top_edge = edges[1].top();
   long long result_cost = 0;
   /**
    * Prim algorithm.
@@ -51,51 +58,40 @@ int main(int argc, char *argv[]) {
    * Maintain a heap.
    *
    */
-  priority_queue<edge, vector<edge>, edge_comparator> shortest_edges;
+//  priority_queue<edge, vector<edge>, edge_comparator> shortest_edges;
   bool if_vertex_known[100001] = {};
   int known_count = 0;
+  vector<int> known_vertices;
 
   if_vertex_known[1] = true;
   known_count += 1;
-  shortest_edges.push(first_top_edge);
-  edges[1].pop();
+  known_vertices.push_back(1);
 
   while (known_count < n) {
     /**
      * Get the shortest edge.
      */
-    edge top_edge = shortest_edges.top();
-    shortest_edges.pop();
-    int old_index = top_edge.start;
+    edge top_edge;
+    top_edge.weight = -1;
+    for (vector<int>::iterator it = known_vertices.begin(); it != known_vertices.end(); ++it) {
+      while (!(edges[*it].empty()) && if_vertex_known[edges[*it].top().end]) {
+        edges[*it].pop();
+      }
+      if (!(edges[*it].empty())) {
+        if (top_edge.weight == -1 ||  top_edge.weight > edges[*it].top().weight) {
+          top_edge = edges[*it].top();
+        }
+      }
+    }
     int target_index = top_edge.end;
-    known_count += 1;
-    cout << top_edge.start << " " << top_edge.end << " " << top_edge.weight << " " << endl;
-    result_cost += top_edge.weight;
     /**
      * Mark the target vertex as known.
      */
-    edge updated_edge;
-
-    while (!(edges[old_index].empty())
-        && if_vertex_known[edges[old_index].top().end]) {
-      (edges[old_index]).pop();
-    }
-    if (!(edges[old_index].empty())) {
-      updated_edge = edges[old_index].top();
-      shortest_edges.push(updated_edge);
-    }
-
     if_vertex_known[target_index] = true;
-
-    while (!(edges[target_index].empty())
-        && if_vertex_known[edges[target_index].top().end]) {
-      (edges[target_index]).pop();
-    }
-    if (!(edges[target_index].empty())) {
-      edge new_edge = edges[target_index].top();
-      shortest_edges.push(new_edge);
-      (edges[target_index]).pop();
-    }
+    known_count += 1;
+    known_vertices.push_back(target_index);
+//    cout << top_edge.start << " " << top_edge.end << " " << top_edge.weight << " " << endl;
+    result_cost += top_edge.weight;
   }
 
   cout << result_cost;
